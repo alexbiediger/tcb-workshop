@@ -40,11 +40,15 @@ dependencies {
   testImplementation 'io.karatelabs:karate-gatling:1.5.2.RC6'
   // Align Gatling core libs to 3.11.5 on the test classpath
   testImplementation 'io.gatling.highcharts:gatling-charts-highcharts:3.11.5'
+  // Provide native SSL for Netty on macOS ARM during tests
+  testImplementation 'io.netty:netty-tcnative-boringssl-static:2.0.65.Final'
 
   // Gatling + Karate for performance tests
   gatlingImplementation 'io.karatelabs:karate-gatling:1.5.2.RC6'
   // Align Gatling core libs to 3.11.5 on the gatling source-set
   gatlingImplementation 'io.gatling.highcharts:gatling-charts-highcharts:3.11.5'
+  // Provide native SSL for Netty on macOS ARM during Gatling runs
+  gatlingImplementation 'io.netty:netty-tcnative-boringssl-static:2.0.65.Final'
 }
 
 test {

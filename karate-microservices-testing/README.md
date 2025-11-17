@@ -141,9 +141,56 @@ Inside this repository it is easier to call `./gradlew …` directly because the
 - `karate-config.js` automatically starts `classpath:mocks/mock-server.feature` when `karate.env=dev`. Create that feature (e.g., copy it from another repo) or disable mock mode with `-Dmock.use=false` / `USE_MOCK=false`.
 - `MockRunnerTest` uses the same feature and blocks for `mock.block.ms` milliseconds. You can package it via the provided `Dockerfile`, but be aware the image expects a `docker-entrypoint.sh` script (not checked in). Add the script before building or adjust the Dockerfile accordingly.
 
-### Performance scaffolding
+### Performance (Gatling)
 
-Gatling is wired in `build.gradle` (`io.gatling.highcharts` + `io.karatelabs:karate-gatling`) and the Gradle plugin `io.gatling.gradle:3.11.5`. Place simulations under `src/gatling/scala/performance/simulations` and run them with standard Gatling Gradle tasks (e.g., `./gradlew gatlingRun`) once the classes exist.
+- Simulations live under `src/gatling/scala/performance/simulations`. The example class is `performance.simulations.KaratePerformanceSimulation`.
+- Feature paths must exist (use `classpath:api` or a specific feature like `classpath:api/users.feature`). If you use `--tags`, ensure those tags are present in the features.
+- On macOS ARM, native Netty SSL is provided automatically via the build configuration.
+
+Gradle examples:
+
+```bash
+./gradlew gatlingRun \
+  -PgatlingSimulationClass=performance.simulations.KaratePerformanceSimulation \
+  -Dkarate.options="classpath:api/users.feature" \
+  -Dkarate.env=qa \
+  -Dinjection=ramp \
+  -DusersPerSec=5 \
+  -DdurationSeconds=120 \
+  --info --rerun-tasks
+```
+
+Run all API features with constant rate for 60s:
+
+```bash
+./gradlew gatlingRun \
+  -PgatlingSimulationClass=performance.simulations.KaratePerformanceSimulation \
+  -Dkarate.options="classpath:api" \
+  -Dkarate.env=qa \
+  -Dinjection=constant \
+  -DusersPerSec=10 \
+  -DdurationSeconds=60
+```
+
+Maven examples:
+
+```bash
+mvn gatling:test \
+  -Dgatling.simulationClass=performance.simulations.KaratePerformanceSimulation \
+  -Dkarate.options="classpath:api/users.feature" \
+  -Dkarate.env=qa \
+  -Dthreads=10
+```
+
+Filter by tags (ensure tags exist in features):
+
+```bash
+mvn gatling:test \
+  -Dgatling.simulationClass=performance.simulations.KaratePerformanceSimulation \
+  -Dkarate.options="classpath:api --tags @perf" \
+  -Dkarate.env=qa \
+  -Dthreads=10
+```
 
 ## Configuration + shared assets
 
@@ -187,6 +234,8 @@ karate-microservices-testing/
 - **Makefile paths** – Because the commands are hard-coded to `./karate-microservices-testing/...`, invoke the Makefile from the parent directory or adjust it to use local `./gradlew`.
 - **Missing Docker entrypoint** – Provide `docker-entrypoint.sh` (or edit the Dockerfile) before building otherwise the image build will fail at the `COPY` step.
 - **Timeouts / flakiness** – Tune `connectTimeout`, `readTimeout`, and `retryConfig` directly in `karate-config.js` or via system properties; reserve retries for safe/idempotent GET flows.
+- **No requests generated in Gatling** – Confirm `-Dkarate.options` points to existing features (e.g., `classpath:api`) and that any `--tags` used actually exist; otherwise Gatling will exit without sending requests.
+- **Netty native SSL on macOS ARM** – The build includes `io.netty:netty-tcnative-boringssl-static` to avoid `UnsatisfiedLinkError: no netty_tcnative_aarch_64`. No extra setup is needed when running Gradle or Maven.
 
 ## Extending the suite
 
