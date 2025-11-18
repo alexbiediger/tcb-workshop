@@ -136,6 +136,18 @@ make -f karate-microservices-testing/Makefile test-smoke env=dev
 
 Inside this repository it is easier to call `./gradlew …` directly because the Makefile hard-codes the `karate-microservices-testing` sub-path.
 
+### Maven runs
+
+| Command | Description |
+| --- | --- |
+| `mvn test -Dkarate.env=qa -Dthreads=5` | Run the full suite with JUnit 5 runners (defaults similar to Gradle `test`). |
+| `mvn test -Dtest='*ApiRunnerTest' -Dkarate.env=qa` | Run only `ApiRunnerTest` across `classpath:api` features. |
+| `mvn test -Dtest='*CustomRunnerTest' -Dkarate.env=qa -Dmock.server.enabled=true -Dmock.port=8090 -Dkarate.options="classpath:api"` | Equivalent to the Gradle CustomRunner example with mock server enabled. |
+| `mvn test -Dtest='*IntegrationRunnerTest' -Duse.mock=false -Dkarate.env=qa` | Run integration flows against real endpoints, disabling mocks. |
+| `mvn test -Dtest='*MockRunnerTest' -Dmock.port=8090 -Dmock.block.ms=300000` | Start the mock server and keep it alive for 5 minutes. |
+
+Tip: On zsh, quote or escape globs so the shell doesn’t expand them. Examples: `-Dtest='*CustomRunnerTest'` or `-Dtest=\*CustomRunnerTest`.
+
 ### Mock server + Docker
 
 - `karate-config.js` automatically starts `classpath:mocks/mock-server.feature` when `karate.env=dev`. Create that feature (e.g., copy it from another repo) or disable mock mode with `-Dmock.use=false` / `USE_MOCK=false`.
